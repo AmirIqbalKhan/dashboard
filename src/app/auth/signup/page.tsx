@@ -1,34 +1,31 @@
 "use client";
-import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export default function SignInPage() {
+export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-    
     try {
-      const res = await signIn("credentials", {
-        redirect: false,
-        email,
-        password,
-        callbackUrl: "/dashboard",
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name }),
       });
-      
-      if (res?.error) {
-        setError("Invalid email or password");
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Failed to sign up");
       } else {
-        router.push("/dashboard");
+        router.push("/auth/signin");
       }
     } catch (err) {
       setError("An error occurred. Please try again.");
@@ -41,17 +38,29 @@ export default function SignInPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to your account</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create an Account</h1>
+          <p className="text-gray-600">Sign up to get started</p>
         </div>
-
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
             {error}
           </div>
         )}
-
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              Name
+            </label>
+            <input
+              id="name"
+              type="text"
+              placeholder="Enter your name"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              required
+            />
+          </div>
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email
@@ -66,7 +75,6 @@ export default function SignInPage() {
               required
             />
           </div>
-
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
               Password
@@ -81,38 +89,18 @@ export default function SignInPage() {
               required
             />
           </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember"
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                checked={rememberMe}
-                onChange={e => setRememberMe(e.target.checked)}
-              />
-              <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
-                Remember me
-              </label>
-            </div>
-            <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:text-blue-500">
-              Forgot password?
-            </Link>
-          </div>
-
           <button
             type="submit"
             disabled={isLoading}
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Signing in..." : "Sign In"}
+            {isLoading ? "Signing up..." : "Sign Up"}
           </button>
         </form>
-
         <p className="mt-8 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
-          <Link href="/auth/signup" className="font-medium text-blue-600 hover:text-blue-500">
-            Sign up
+          Already have an account?{" "}
+          <Link href="/auth/signin" className="font-medium text-blue-600 hover:text-blue-500">
+            Sign in
           </Link>
         </p>
       </div>
