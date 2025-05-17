@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:dev.db"
+}
+
+model User {
+  id              String           @id @default(cuid())
+  name            String?
+  email           String           @unique
+  password        String
+  roleId          String
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  invitedById     String?
+  ecommerceEvents EcommerceEvent[]
+  invitedBy       User?            @relation("UserInvites", fields: [invitedById], references: [id])
+  invitedUsers    User[]           @relation("UserInvites")
+  role            Role             @relation(fields: [roleId], references: [id])
+  activities      UserActivity[]
+  auditLogs       AuditLog[]
+  onboardingSteps UserOnboardingStep[]
+  newsPosts       NewsPost[]
+  notifications   Notification[]
+  orders          Order[]
+}
+
+model Role {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  users       User[]
+  permissions Permission[] @relation("PermissionToRole")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  roles       Role[]   @relation("PermissionToRole")
+}
+
+model UserActivity {
+  id        String   @id @default(cuid())
+  userId    String?
+  type      String
+  page      String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Site {
+  id        String          @id @default(cuid())
+  name      String
+  url       String
+  analytics SiteAnalytics[]
+}
+
+model SiteAnalytics {
+  id          String   @id @default(cuid())
+  siteId      String
+  date        DateTime
+  pageViews   Int
+  uniqueUsers Int
+  referrer    String?
+  site        Site     @relation(fields: [siteId], references: [id])
+}
+
+model EcommerceEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  type      String
+  amount    Float?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+}
+
+model OnboardingStep {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  order       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userSteps   UserOnboardingStep[]
+}
+
+model UserOnboardingStep {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  step      OnboardingStep @relation(fields: [stepId], references: [id])
+  stepId    String
+  completedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, stepId])
+}
+
+model NewsPost {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   // e.g., "system", "user_action", "alert"
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  price       Float
+  sku         String   @unique
+  stock       Int      @default(0)
+  images      String   // Store as JSON string
+  category    String
+  status      String   @default("active") // active, draft, archived
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orders      OrderItem[]
+  sales       Sale[]
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  status        String      // pending, processing, shipped, delivered, cancelled
+  total         Float
+  items         OrderItem[]
+  shippingAddress String
+  billingAddress  String
+  paymentStatus String      // pending, paid, failed
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  sales         Sale[]
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Sale {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  amount    Float
+  date      DateTime @default(now())
+}
