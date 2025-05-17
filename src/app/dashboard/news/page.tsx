@@ -1,3 +1,5 @@
+'use client';
+
 import NewsFeed from '@/components/NewsFeed';
 import { useSession } from 'next-auth/react';
 import { hasPermission } from '@/utils/roleAccess';
