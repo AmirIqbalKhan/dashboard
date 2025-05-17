@@ -127,31 +127,35 @@ export const RolesManager: React.FC = () => {
         <div className="mb-4">
           <div className="font-semibold mb-2">Permissions:</div>
           <div className="flex flex-col gap-2">
-            {Object.entries(groupedPermissions).map(([page, actions]) => (
-              <div key={page} className="flex items-center gap-4 bg-white/30 px-3 py-2 rounded-lg">
-                <span className="capitalize font-medium min-w-[120px]">{page.replace(/_/g, ' ')}</span>
-                {actions.view && (
-                  <label className="flex items-center gap-1">
-                    <input
-                      type="checkbox"
-                      checked={form.permissionIds.includes(actions.view.id)}
-                      onChange={() => handlePermissionToggle(actions.view.id)}
-                    />
-                    <span className="text-sm">View</span>
-                  </label>
-                )}
-                {actions.manage && (
-                  <label className="flex items-center gap-1">
-                    <input
-                      type="checkbox"
-                      checked={form.permissionIds.includes(actions.manage.id)}
-                      onChange={() => handlePermissionToggle(actions.manage.id)}
-                    />
-                    <span className="text-sm">Manage</span>
-                  </label>
-                )}
-              </div>
-            ))}
+            {Object.entries(groupedPermissions).map(([page, actions]) => {
+              const viewPermission = actions.view;
+              const managePermission = actions.manage;
+              return (
+                <div key={page} className="flex items-center gap-4 bg-white/30 px-3 py-2 rounded-lg">
+                  <span className="capitalize font-medium min-w-[120px]">{page.replace(/_/g, ' ')}</span>
+                  {viewPermission && (
+                    <label className="flex items-center gap-1">
+                      <input
+                        type="checkbox"
+                        checked={form.permissionIds.includes(viewPermission.id)}
+                        onChange={() => handlePermissionToggle(viewPermission.id)}
+                      />
+                      <span className="text-sm">View</span>
+                    </label>
+                  )}
+                  {managePermission && (
+                    <label className="flex items-center gap-1">
+                      <input
+                        type="checkbox"
+                        checked={form.permissionIds.includes(managePermission.id)}
+                        onChange={() => handlePermissionToggle(managePermission.id)}
+                      />
+                      <span className="text-sm">Manage</span>
+                    </label>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
         <button
