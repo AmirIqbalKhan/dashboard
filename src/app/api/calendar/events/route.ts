@@ -11,7 +11,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const events = await prisma.calendarEvent.findMany({
-      where: { userId: session.user.email }, // or use userId if available
+      where: { userId: session.user.email! }, // assert not null
       orderBy: { start: 'asc' },
     });
     return NextResponse.json(events);
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
         end: new Date(end),
         allDay: !!allDay,
         description,
-        userId: session.user.email, // or use userId if available
+        userId: session.user.email!, // assert not null
       },
     });
     return NextResponse.json(event, { status: 201 });

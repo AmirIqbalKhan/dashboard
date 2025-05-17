@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar as BigCalendar, dateFnsLocalizer, SlotInfo, Event as RBCEvent } from "react-big-calendar";
 import { format } from "date-fns/format";
 import { parse } from "date-fns/parse";
@@ -36,7 +36,49 @@ interface Event {
 export function Calendar() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { brandColor } = useTheme();
+
+  // Fetch events with timeout and error handling
+  useEffect(() => {
+    let didTimeout = false;
+    const timeout = setTimeout(() => {
+      didTimeout = true;
+      setLoading(false);
+      setError('Loading calendar events timed out.');
+    }, 10000); // 10 seconds
+
+    fetch('/api/calendar/events')
+      .then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'Failed to load events');
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (!didTimeout) {
+          setEvents(
+            data.map((e: any) => ({
+              ...e,
+              start: new Date(e.start),
+              end: new Date(e.end),
+            }))
+          );
+          setLoading(false);
+        }
+        console.log('Calendar events loaded:', data);
+      })
+      .catch((err) => {
+        if (!didTimeout) {
+          setError(err.message || 'Failed to load events');
+          setLoading(false);
+        }
+        console.error('Calendar API error:', err);
+      })
+      .finally(() => clearTimeout(timeout));
+    return () => clearTimeout(timeout);
+  }, []);
 
   async function handleSelectSlot(slotInfo: SlotInfo) {
     const title = window.prompt("New Event name");
@@ -82,6 +124,16 @@ export function Calendar() {
       {loading ? (
         <div className="flex justify-center items-center h-full">
           <ClipLoader color={brandColor} size={48} />
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center h-full text-red-600">
+          <div className="mb-2 font-semibold">{error}</div>
+          <button
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </button>
         </div>
       ) : (
         <BigCalendar
