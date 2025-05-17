@@ -24,16 +24,16 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'News Feed', href: '/dashboard/news', icon: Newspaper },
-  { name: 'Users', href: '/dashboard/users', icon: Users },
-  { name: 'Roles', href: '/dashboard/roles', icon: Shield },
-  { name: 'Products', href: '/dashboard/products', icon: Package },
-  { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart2 },
-  { name: 'Calendar', href: '/dashboard/calendar', icon: Calendar },
-  { name: 'Onboarding', href: '/dashboard/onboarding', icon: UserPlus },
-  { name: 'Audit Logs', href: '/dashboard/audit-logs', icon: FileText },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'manager', 'user'] },
+  { name: 'News Feed', href: '/dashboard/news', icon: Newspaper, roles: ['admin', 'manager', 'user'] },
+  { name: 'Users', href: '/dashboard/users', icon: Users, roles: ['admin', 'manager'] },
+  { name: 'Roles', href: '/dashboard/roles', icon: Shield, roles: ['admin'] },
+  { name: 'Products', href: '/dashboard/products', icon: Package, roles: ['admin', 'manager'] },
+  { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart2, roles: ['admin', 'manager'] },
+  { name: 'Calendar', href: '/dashboard/calendar', icon: Calendar, roles: ['admin', 'manager', 'user'] },
+  { name: 'Onboarding', href: '/dashboard/onboarding', icon: UserPlus, roles: ['admin'] },
+  { name: 'Audit Logs', href: '/dashboard/audit-logs', icon: FileText, roles: ['admin'] },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings, roles: ['admin', 'manager', 'user'] },
 ];
 
 interface SidebarProps {
@@ -45,6 +45,8 @@ interface SidebarProps {
 export default function NewSidebar({ isOpen, onToggle, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const userRole = session?.user?.role || 'user';
+  const filteredNavigation = navigation.filter(item => item.roles.includes(userRole));
 
   return (
     <div className={cn(
@@ -82,7 +84,7 @@ export default function NewSidebar({ isOpen, onToggle, onClose }: SidebarProps) 
       {/* Navigation */}
       <div className="h-[calc(100vh-8rem)] overflow-y-auto">
         <nav className="p-4 space-y-1">
-          {navigation.map((item) => {
+          {filteredNavigation.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link

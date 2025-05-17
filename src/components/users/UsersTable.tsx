@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { ClipLoader } from "react-spinners";
 import { useTheme } from "@/app/theme-context";
 import { Edit2, Trash2, UserCheck, UserX } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface User {
   id: string;
@@ -22,9 +23,14 @@ export const UsersTable: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const { brandColor } = useTheme();
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', email: '', role: '' });
+  const [roles, setRoles] = useState<{ id: string; name: string }[]>([]);
+  const [editLoading, setEditLoading] = useState(false);
 
   useEffect(() => {
     fetchUsers();
+    fetchRoles();
   }, []);
 
   const fetchUsers = async () => {
@@ -36,6 +42,16 @@ export const UsersTable: React.FC = () => {
       console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRoles = async () => {
+    try {
+      const res = await fetch('/api/roles');
+      const data = await res.json();
+      setRoles(Array.isArray(data) ? data : []);
+    } catch (error) {
+      setRoles([]);
     }
   };
 
@@ -62,6 +78,57 @@ export const UsersTable: React.FC = () => {
       fetchUsers();
     } catch (error) {
       console.error('Error updating user role:', error);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    try {
+      await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+      fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    }
+  };
+
+  const openEditModal = (user: User) => {
+    setEditingUser(user);
+    setEditForm({
+      name: user.name || '',
+      email: user.email,
+      role: user.role.name,
+    });
+  };
+
+  const closeEditModal = () => {
+    setEditingUser(null);
+    setEditForm({ name: '', email: '', role: '' });
+  };
+
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setEditLoading(true);
+    try {
+      await fetch(`/api/users/${editingUser.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editForm.name,
+          email: editForm.email,
+          role: editForm.role,
+        }),
+      });
+      closeEditModal();
+      fetchUsers();
+    } catch (error) {
+      console.error('Error editing user:', error);
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -110,10 +177,16 @@ export const UsersTable: React.FC = () => {
                   >
                     {user.isActive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                   </button>
-                  <button className="p-1 rounded-full text-blue-600 hover:bg-blue-50 transition-colors">
+                  <button
+                    className="p-1 rounded-full text-blue-600 hover:bg-blue-50 transition-colors"
+                    onClick={() => openEditModal(user)}
+                  >
                     <Edit2 className="w-4 h-4" />
                   </button>
-                  <button className="p-1 rounded-full text-red-600 hover:bg-red-50 transition-colors">
+                  <button
+                    className="p-1 rounded-full text-red-600 hover:bg-red-50 transition-colors"
+                    onClick={() => handleDeleteUser(user.id)}
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </td>
@@ -122,6 +195,67 @@ export const UsersTable: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Edit User Modal */}
+      {editingUser && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md relative">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700"
+              onClick={closeEditModal}
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4">Edit User</h2>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input
+                  name="name"
+                  type="text"
+                  value={editForm.name}
+                  onChange={handleEditFormChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  name="email"
+                  type="email"
+                  value={editForm.email}
+                  onChange={handleEditFormChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <select
+                  name="role"
+                  value={editForm.role}
+                  onChange={handleEditFormChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  required
+                >
+                  <option value="" disabled>Select a role</option>
+                  {roles.map((role) => (
+                    <option key={role.id} value={role.name}>{role.name}</option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="submit"
+                disabled={editLoading}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {editLoading ? 'Saving...' : 'Save Changes'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }; 

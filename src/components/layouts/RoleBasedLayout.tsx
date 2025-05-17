@@ -27,7 +27,7 @@ export function RoleBasedLayout({ children }: RoleBasedLayoutProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
@@ -75,7 +75,7 @@ export function RoleBasedLayout({ children }: RoleBasedLayoutProps) {
     <div className="min-h-screen bg-gradient-to-r from-purple-600 to-indigo-600">
       <div className="relative">
         <div className={`bg-white/10 backdrop-blur-lg border-b border-white/10 ${headerPadding}`}>
-          <Header isCollapsed={isCollapsed} pageTitle={pageTitle} onSidebarOpen={() => setIsCollapsed(false)} />
+          <Header isCollapsed={isCollapsed} onSidebarOpen={() => setIsCollapsed(false)} />
         </div>
         <NewSidebar 
           isOpen={!isCollapsed} 
