@@ -24,7 +24,7 @@ export default function SettingsPage() {
         <div className="bg-white/40 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/30 p-8">
           <h2 className="text-xl font-semibold mb-4">General Settings</h2>
           <SettingsForm />
-        </div>
+          </div>
       </div>
     </div>
   );

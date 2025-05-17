@@ -1,55 +1,19 @@
 import { NextAuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import { prisma } from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
+import { SupabaseAdapter } from '@next-auth/supabase-adapter';
 
 export const authOptions: NextAuthOptions = {
+  adapter: SupabaseAdapter({
+    url: process.env.SUPABASE_URL!,
+    secret: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  }),
   providers: [
-    CredentialsProvider({
-      name: 'Credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' }
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-          include: { role: true }
-        });
-
-        if (!user || !user.isActive) {
-          return null;
-        }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isPasswordValid) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role.name
-        };
-      }
-    })
+    // Add OAuth providers here if needed, or use Supabase Auth directly
   ],
-  pages: {
-    signIn: '/auth/signin',
-  },
-  debug: process.env.NEXTAUTH_DEBUG === 'true',
+  secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: 'jwt',
   },
+  debug: process.env.NEXTAUTH_DEBUG === 'true',
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -64,5 +28,4 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
 }; 
