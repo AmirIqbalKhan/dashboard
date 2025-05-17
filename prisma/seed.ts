@@ -72,10 +72,17 @@ async function main() {
       },
     });
 
-    // Create admin user
+    // Always create default admin user
     const hashedPassword = await bcrypt.hash('admin123', 10);
-    const adminUser = await prisma.user.create({
-      data: {
+    await prisma.user.upsert({
+      where: { email: 'admin@example.com' },
+      update: {
+        password: hashedPassword,
+        name: 'Admin User',
+        isActive: true,
+        roleId: adminRole.id,
+      },
+      create: {
         email: 'admin@example.com',
         name: 'Admin User',
         password: hashedPassword,
@@ -83,6 +90,9 @@ async function main() {
         isActive: true,
       },
     });
+
+    const adminUser = await prisma.user.findUnique({ where: { email: 'admin@example.com' } });
+    if (!adminUser) throw new Error('Admin user not found after upsert');
 
     // Create sample data
     await prisma.userActivity.createMany({
@@ -144,6 +154,22 @@ async function main() {
         where: { name: perm.name },
         update: {},
         create: perm,
+      });
+    }
+
+    const roles = [
+      { name: 'user', description: 'Default user role' },
+      { name: 'admin', description: 'Administrator role' },
+    ];
+
+    for (const role of roles) {
+      await prisma.role.upsert({
+        where: { name: role.name },
+        update: {},
+        create: {
+          name: role.name,
+          description: role.description,
+        },
       });
     }
 
