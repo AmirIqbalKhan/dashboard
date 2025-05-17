@@ -94,8 +94,8 @@ export const RolesManager: React.FC = () => {
     const match = perm.name.match(/^(view|manage)_(.+)$/);
     if (!match) return acc;
     const [, action, page] = match;
-    if (!acc[page]) acc[page] = {};
-    acc[page][action] = perm;
+    if (!acc[page]) acc[page] = { view: undefined, manage: undefined };
+    acc[page][action as 'view' | 'manage'] = perm;
     return acc;
   }, {} as Record<string, { view?: Permission; manage?: Permission }>);
 
