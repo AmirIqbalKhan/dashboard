@@ -62,7 +62,7 @@ export function Calendar() {
     }
   }
 
-  async function handleSelectEvent(event: RBCEvent) {
+  async function handleSelectEvent(event: Event) {
     if (window.confirm(`Delete event '${event.title}'?`)) {
       try {
         const response = await fetch(`/api/calendar/events/${event.id}`, {
