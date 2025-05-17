@@ -14,6 +14,7 @@ import {
   Newspaper,
   LogOut,
   ChevronRight,
+  ChevronLeft,
   Package,
   BarChart2,
   UserPlus,
@@ -41,7 +42,7 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-export default function Sidebar({ isOpen, onToggle, onClose }: SidebarProps) {
+export default function NewSidebar({ isOpen, onToggle, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
 
@@ -52,7 +53,22 @@ export default function Sidebar({ isOpen, onToggle, onClose }: SidebarProps) {
     )}>
       {/* Header */}
       <div className="h-16 flex items-center justify-between border-b border-gray-800 px-4">
-        <h1 className="text-xl font-bold">Admin Dashboard</h1>
+        <div className="flex items-center gap-2 flex-1">
+          <h1 className="text-xl font-bold">Admin Dashboard</h1>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="transition-transform"
+            onClick={onToggle}
+            aria-label={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+          >
+            {isOpen ? (
+              <ChevronLeft className="h-5 w-5" />
+            ) : (
+              <ChevronRight className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
         <Button
           variant="ghost"
           size="icon"

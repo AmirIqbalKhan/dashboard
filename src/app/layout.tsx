@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
 import dynamic from 'next/dynamic'
-// import { NavbarWrapper } from './navbar-wrapper'
+import { NavbarWrapper } from './navbar-wrapper'
 
 const AssistantPanel = dynamic(() => import('@/components/AssistantPanel'), {
   ssr: false
